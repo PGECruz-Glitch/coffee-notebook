@@ -1501,6 +1501,7 @@
   <button id="addrec" style="background:#8f2d2d;border-color:#6e1f1f">✎ add recipe</button>
   <button class="mini" id="exportrec">⇩ save my writing</button>
   <button class="mini" id="importrec">⇧ load my writing</button>
+  <button class="mini" id="fullscreen">⛶ full screen</button>
   <button class="mini" id="printpdf">⎙ print / PDF</button>
   <input type="file" id="importfile" accept=".json" style="display:none">
 </div>
@@ -1881,6 +1882,26 @@
   document.querySelectorAll('.face').forEach(f=>{
     if(!f.querySelector('.burn')){ const b=document.createElement('div'); b.className='burn'; f.appendChild(b); }
   });
+
+  /* full screen toggle */
+  const fsBtn = document.getElementById('fullscreen');
+  const fsElem = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const docEl = document.documentElement;
+  if(!docEl.requestFullscreen && !docEl.webkitRequestFullscreen){
+    fsBtn.style.display = 'none';
+  } else {
+    fsBtn.addEventListener('click', ()=>{
+      if(fsElem()){
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+      }
+    });
+    ['fullscreenchange','webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, ()=>{
+      fsBtn.textContent = fsElem() ? '🗗 exit full screen' : '⛶ full screen';
+      setTimeout(fit, 150);  // screen size changes — re-fit the book
+    }));
+  }
 
   /* print the whole notebook to PDF */
   document.getElementById('printpdf').addEventListener('click', ()=>{
