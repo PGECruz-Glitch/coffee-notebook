@@ -267,6 +267,17 @@
     radial-gradient(70px 30px at 55% 101%, rgba(28,13,4,.42) 20%, transparent 75%),
     radial-gradient(60px 26px at 35% -1%, rgba(28,13,4,.38) 20%, transparent 75%);}
 
+  /* ── corner fullscreen button + toast ── */
+  .fsbtn{position:fixed;top:10px;right:12px;z-index:950;width:38px;height:38px;border-radius:8px;
+    background:rgba(60,40,20,.75);border:1px solid #8a6a44;color:#f0e2c8;font-size:19px;line-height:34px;
+    cursor:pointer;text-align:center;padding:0}
+  .fsbtn:hover{background:#6b4a2c}
+  .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:1500;
+    background:#3a2415;color:#f0e2c8;border:1px solid #8a6a44;border-radius:8px;padding:10px 18px;
+    font-family:'Special Elite',monospace;font-size:12.5px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  @media print{ .fsbtn,.toast{display:none !important} }
+
   /* ── phone / portrait mode ── */
   body.mobileview{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
   body.mobileview .deskhint{display:none}
@@ -1883,23 +1894,42 @@
     if(!f.querySelector('.burn')){ const b=document.createElement('div'); b.className='burn'; f.appendChild(b); }
   });
 
-  /* full screen toggle */
+  /* full screen toggle — bottom-bar button + always-visible corner button */
   const fsBtn = document.getElementById('fullscreen');
+  const fsCorner = document.createElement('button');
+  fsCorner.className = 'fsbtn'; fsCorner.title = 'full screen'; fsCorner.textContent = '⛶';
+  document.body.appendChild(fsCorner);
+  const toast = document.createElement('div');
+  toast.className = 'toast'; document.body.appendChild(toast);
+  let toastTimer;
+  function showToast(msg){
+    toast.textContent = msg; toast.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(()=>toast.classList.remove('show'), 4000);
+  }
   const fsElem = () => document.fullscreenElement || document.webkitFullscreenElement;
   const docEl = document.documentElement;
-  if(!docEl.requestFullscreen && !docEl.webkitRequestFullscreen){
-    fsBtn.style.display = 'none';
-  } else {
-    fsBtn.addEventListener('click', ()=>{
+  function toggleFS(){
+    try{
       if(fsElem()){
         (document.exitFullscreen || document.webkitExitFullscreen).call(document);
       } else {
-        (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+        const req = (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+        if(req && req.catch) req.catch(()=> showToast('Your browser blocked full screen — try pressing F11 instead.'));
       }
-    });
+    }catch(err){ showToast('Full screen not available here — try pressing F11.'); }
+  }
+  if(!docEl.requestFullscreen && !docEl.webkitRequestFullscreen){
+    fsBtn.style.display = 'none';
+    fsCorner.addEventListener('click', ()=> showToast('This browser has no full-screen mode — on Windows press F11.'));
+  } else {
+    fsBtn.addEventListener('click', toggleFS);
+    fsCorner.addEventListener('click', toggleFS);
     ['fullscreenchange','webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, ()=>{
-      fsBtn.textContent = fsElem() ? '🗗 exit full screen' : '⛶ full screen';
-      setTimeout(fit, 150);  // screen size changes — re-fit the book
+      const on = !!fsElem();
+      fsBtn.textContent = on ? '🗗 exit full screen' : '⛶ full screen';
+      fsCorner.textContent = on ? '🗗' : '⛶';
+      fsCorner.title = on ? 'exit full screen' : 'full screen';
+      setTimeout(fit, 150); setTimeout(fit, 600);  // some browsers animate into fullscreen
     }));
   }
 
