@@ -147,6 +147,11 @@
   .tnow{flex:1;min-width:0}
   .tstep{font-family:var(--hand);font-size:19px;color:#2c2418;line-height:1.14}
   .tnext{font-family:var(--hand);font-size:15px;color:#8b8578;line-height:1.14;margin-top:1px}
+  .tgrind{font-family:var(--hand);font-size:15.5px;color:#2c2418;line-height:1.14;margin-top:4px;
+          border-left:3px solid #8f2d2d;padding:1px 0 1px 7px}
+  .tgrind b{color:#8f2d2d}
+  .tgrind .tgn{color:#8b8578;font-size:14px}
+  .tgrind .tgw{color:#8f2d2d;font-weight:700}
   .chip.tbtn{font-size:16px;padding:1px 11px}
   .chip.tbtn.on{background:#2f6b46;border-color:#2f6b46;color:#fdfaf1;font-weight:700}
   table.steps.aerotight tr.tcur td{background:rgba(143,45,45,.13);font-weight:700}
@@ -2086,13 +2091,15 @@
   <div class="face front">
     <div class="kicker">Chapter XI · Reference</div>
     <h2 class="pagetitle">THE BREW TIMER</h2>
-    <div class="note" style="margin:2px 0 3px;font-size:14.5px;line-height:1.14">Pick a recipe, set your dose, press START. It counts you through every pour with the gram target already scaled. Prop the phone against the kettle.</div>
+    <div class="note" style="margin:2px 0 3px;font-size:14.5px;line-height:1.14">Pick a recipe, set your dose, press START. It gives you the <b>grind setting first</b>, then counts you through every pour with the gram target already scaled. Prop the phone against the kettle.</div>
 
     <div class="calc" id="timerbox">
       <div class="calcgrid" style="align-items:center;gap:8px">
         <select id="tRec" class="calcsel" style="max-width:250px"></select>
         <label>dose<input type="number" id="tDose" step="0.5" min="0"><span class="u">g</span></label>
       </div>
+
+      <div class="tgrind" id="tGrind"></div>
 
       <div class="tclock">
         <div class="tbig" id="tClock">0:00</div>
@@ -2112,8 +2119,8 @@
 
     <table class="steps aerotight" id="tTable" style="margin-top:5px"></table>
 
-    <div class="note" style="margin-top:5px;font-size:14px;line-height:1.14">The highlighted row is where you are now. A step with no clock time (a stir, a flip, a wait) is listed but not counted down — those are yours to judge.</div>
-    <div class="src">recipes and scaling shared with the calculator two pages back</div>
+    <div class="note" style="margin-top:4px;font-size:14px;line-height:1.14">The highlighted row is where you are now. A step with no clock time (a stir, a flip, a wait) is listed but not counted down — those are yours to judge. Click figures come off our own dial (p. 72); <b>✓</b> means the champion published microns, <b>⚠</b> means it's a starting point to tune.</div>
+    <div class="src">recipes, grind and scaling shared with the calculator two pages back</div>
     <div class="pageno">77</div>
   </div>
   <div class="face back">
@@ -3398,70 +3405,92 @@
 
     // every figure below is taken from this notebook's own recipe pages
     const RECIPES = [
-      { n:'V60 · Kasuya 4:6 (2016 champion)', d:20, w:300, t:'93 °C', p:[
+      { n:'V60 · Kasuya 4:6 (2016 champion)', d:20, w:300, t:'93 °C',
+        g:'MEDIUM-COARSE', gc:'53–67 clicks', gn:'rough sand · the 4:6 band on our dial', p:[
         ['0:00','60','the bloom'],['0:45','60','first 40% done'],['1:30','60','now the 60%'],
         ['2:10','60',''],['2:40','60','drawdown ≈ 3:30']] },
-      { n:'V60 · Kasuya 2016 competition original', d:20, w:300, t:'92 °C', p:[
+      { n:'V60 · Kasuya 2016 competition original', d:20, w:300, t:'92 °C',
+        g:'COARSE', gc:'67–80 clicks', gn:'his competition sheet says coarse — coarser than the textbook 4:6', p:[
         ['0:00','50','the bloom'],['0:45','70','the "4" is done'],['1:30','60',''],
         ['2:15','60',''],['3:00','60','lift the dripper at 3:30']] },
-      { n:'V60 · Kasuya dark-roast (1:17, 88 °C)', d:20, w:340, t:'88 °C', p:[
+      { n:'V60 · Kasuya dark-roast (1:17, 88 °C)', d:20, w:340, t:'88 °C',
+        g:'COARSE', gc:'~72–80 clicks', gn:'⚠ grind not published for this variation — 4:6 setting, a touch coarser for the dark roast', p:[
         ['0:00','57','bloom — 40% split kept'],['0:45','79','the "4" is done'],['1:30','68',''],
         ['2:15','68',''],['3:00','68','cooler + more water for dark roasts']] },
-      { n:'V60 · Hoffmann ultimate (serves 2)', d:30, w:500, t:'just off boil', p:[
+      { n:'V60 · Hoffmann ultimate (serves 2)', d:30, w:500, t:'just off boil',
+        g:'MEDIUM-FINE', gc:'27–40 clicks', gn:'fine sand · a 30 g bed drains slowly, so start at the coarse end', p:[
         ['0:00','60','bloom, swirl'],['0:45','240',''],['1:15','200',''],
         ['1:45','—','swirl, then let it draw']] },
-      { n:'V60 · Kasuya 10-pour', d:20, w:300, t:'95–96 °C', p:[
+      { n:'V60 · Kasuya 10-pour', d:20, w:300, t:'95–96 °C',
+        g:'EXTRA-COARSE', gc:'~80–90 clicks ≈ 1.6.0–1.8.0', gn:'40–45 on a C40 — the coarsest recipe in this book, and it is meant to be', p:[
         ['0:00','30',''],['0:20','30',''],['0:40','30',''],['1:00','30',''],['1:20','30',''],
         ['1:40','30',''],['2:00','30',''],['2:20','30',''],['2:40','30',''],['3:00','30','super-coarse grind']] },
-      { n:'Pour-over · Medina 2023 champion', d:15.5, w:250, t:'91 °C', p:[
+      { n:'Pour-over · Medina 2023 champion', d:15.5, w:250, t:'91 °C',
+        g:'MEDIUM-FINE', gc:'~35 clicks', gn:'⚠ grind not published — start here and tune by taste', p:[
         ['0:00','50','spiral out and in'],['0:30','50','30 s silent time'],['1:00','50',''],
         ['1:30','50',''],['2:00','50','total 2:40']] },
-      { n:'Pour-over · Wölfl 2024 champion', d:17, w:270, t:'93 °C', p:[
+      { n:'Pour-over · Wölfl 2024 champion', d:17, w:270, t:'93 °C',
+        g:'MEDIUM-FINE', gc:'33 clicks', gn:'✓ he publishes 490 µm — 490 ÷ 15 µm per click = 33', p:[
         ['0:00','60','bloom'],['0:40','60',''],['1:20','50',''],['2:00','100','the big finish']] },
-      { n:'Pour-over · Peng 2025 champion', d:15, w:210, t:'96 °C → 80 °C', p:[
+      { n:'Pour-over · Peng 2025 champion', d:15, w:210, t:'96 °C → 80 °C',
+        g:'MEDIUM', gc:'~40 clicks', gn:'⚠ 11 clicks on an FM grinder, no microns published — not honestly convertible', p:[
         ['0:00','30','96 °C, 6-second pour'],['0:30','90','96 °C, 10-second pour'],
         ['1:10','90','80 °C — cooler water late']] },
-      { n:'AeroPress · Hoffmann daily', d:11, w:200, t:'just off boil', p:[
+      { n:'AeroPress · Hoffmann daily', d:11, w:200, t:'just off boil',
+        g:'FINE – MEDIUM-FINE', gc:'22–35 clicks', gn:'table salt to fine sand · finer than you would use in a V60', p:[
         ['0:00','200','all at once, upright'],['0:15','—','plunger in, stops the drip'],
         ['2:00','—','swirl gently'],['2:30','—','press slowly ~30 s']] },
-      { n:'AeroPress · Stanica 2024 champion', d:18, w:100, t:'96 °C', p:[
+      { n:'AeroPress · Stanica 2024 champion', d:18, w:100, t:'96 °C',
+        g:'MEDIUM-COARSE', gc:'58 clicks', gn:'✓ he publishes 870 µm — 870 ÷ 15 = 58. Coarse for an AeroPress, deliberately', p:[
         ['0:00','50','inverted'],['0:30','50','after a 30 s bloom'],
         ['1:35','—','flip and press 30–40 s'],['dilute','—','warm to 130–135 g, then 20–30 g cold']] },
-      { n:'Chemex · Scott Rao (dig, stir, spin)', d:30, w:510, t:'97 °C', p:[
+      { n:'Chemex · Scott Rao (dig, stir, spin)', d:30, w:510, t:'97 °C',
+        g:'MEDIUM', gc:'~45 clicks', gn:'beach sand · the stirring adds agitation, so do not go finer to chase strength', p:[
         ['0:00','45','pre-wet'],['0:10','—','dig the bed with a spoon'],['0:35','—','let it bloom'],
         ['0:40','465','pour in circles, one continuous pour'],['1:10','—','light stir of the outer ring'],
         ['1:20','—','the Rao spin'],['2:30','—','drawdown done']] },
-      { n:'Chemex · Onyx big batch (8-cup)', d:55, w:900, t:'205 °F off boil', p:[
+      { n:'Chemex · Onyx big batch (8-cup)', d:55, w:900, t:'205 °F off boil',
+        g:'MEDIUM', gc:'45–53 clicks', gn:'⚠ grind not published — a 900 g bed drains slowly, so start at the coarse end', p:[
         ['0:00','110','bloom 45 s'],['0:45','200',''],['1:30','200',''],
         ['2:30','200',''],['3:30','190','total 6:00–7:00']] },
-      { n:'Chemex · Hoffmann (serves 2)', d:30, w:500, t:'100 °C', p:[
+      { n:'Chemex · Hoffmann (serves 2)', d:30, w:500, t:'100 °C',
+        g:'MEDIUM', gc:'40–53 clicks', gn:'beach sand · thick Chemex paper is slow, do not fight it with a fine grind', p:[
         ['0:00','60','bloom'],['0:45','240',''],['1:30','200','']] },
-      { n:'French press · Scott Rao (submerged crust)', d:30, w:540, t:'95 °C', p:[
+      { n:'French press · Scott Rao (submerged crust)', d:30, w:540, t:'95 °C',
+        g:'MEDIUM', gc:'40–53 clicks', gn:'finer than a normal press — the submerged plunger holds the fines down', p:[
         ['0:00','540','all at once, medium grind'],['0:10','—','plunger 1 cm BELOW the surface'],
         ['4:20','—','plunge gently'],['4:30','—','let fines settle — total 5:20']] },
-      { n:'French press · the patient press', d:30, w:500, t:'100 °C', p:[
+      { n:'French press · the patient press', d:30, w:500, t:'100 °C',
+        g:'MEDIUM-COARSE', gc:'53–67 clicks', gn:'rough sand · nine minutes of contact, so keep the surface area down', p:[
         ['0:00','500','all at once'],['4:00','—','break the crust, skim'],
         ['9:30','—','pour gently, no plunge']] },
-      { n:'French press · classic 4-minute', d:56, w:850, t:'96 °C', p:[
+      { n:'French press · classic 4-minute', d:56, w:850, t:'96 °C',
+        g:'COARSE', gc:'67–80 clicks', gn:'breadcrumbs · too fine here and the plunger fights you, then the cup is muddy', p:[
         ['0:00','850','all at once, coarse grind'],['4:00','—','stir, then plunge slowly']] },
-      { n:'Kalita Wave · Kurasu everyday', d:15, w:250, t:'90–93 °C', p:[
+      { n:'Kalita Wave · Kurasu everyday', d:15, w:250, t:'90–93 °C',
+        g:'MEDIUM-COARSE', gc:'53–67 clicks', gn:'rough sand · the flat bed drains faster than a cone, so coarser than a V60', p:[
         ['0:00','30','bloom'],['0:30','120','the big pour'],
         ['1:45','100','total 2:30–2:45']] },
-      { n:'Kalita 155 · one cup, no agitation', d:17, w:250, t:'~92 °C', p:[
+      { n:'Kalita 155 · one cup, no agitation', d:17, w:250, t:'~92 °C',
+        g:'MEDIUM', gc:'40–53 clicks', gn:'beach sand · zero agitation is the rule, so the grind does all the work', p:[
         ['0:00','40','pre-infuse'],['then','25','×8 pours, 10 s apart'],
         ['rule','—','NO stirring, NO swirling'],['3:00','—','total 2:45–3:30']] },
-      { n:'Siphon · Hario official', d:17, w:250, t:'pre-heated', p:[
+      { n:'Siphon · Hario official', d:17, w:250, t:'pre-heated',
+        g:'MEDIUM-FINE', gc:'27–40 clicks', gn:'Hario’s own spec. Full immersion at heat with only ~75 s of brew — finer than most immersion', p:[
         ['prep','250','pre-heated water in the lower bulb'],['up','—','water climbs; add the coffee'],
         ['0:00','—','3–5 circular stirs, then reduce heat'],['1:10','—','3 good stirs, kill the heat'],
         ['↓','—','vacuum pulls it down — serve']] },
-      { n:'Cold brew · Kurasu ready-to-drink', d:50, w:750, t:'room temp', p:[
+      { n:'Cold brew · Kurasu ready-to-drink', d:50, w:750, t:'room temp',
+        g:'COARSE', gc:'67–80 clicks', gn:'EK #10 · hours of contact, so coarse is what keeps it clean instead of muddy', p:[
         ['0:00','750','pour slowly over a coarse grind'],['8–15 h','—','steep at room temperature'],
         ['finish','—','pull the filter out, then fridge'],['keep','—','drink within 2 days']] },
-      { n:'Moka · Bialetti Brikka', d:20, w:200, t:'98 °C in', p:[
+      { n:'Moka · Bialetti Brikka', d:20, w:200, t:'98 °C in',
+        g:'FINE', gc:'~20 clicks', gn:'powdered sugar · the weighted valve needs the resistance. Level it, never tamp', p:[
         ['fill','200','hot water to the fill line'],['dose','—','fine grind, levelled, not tamped'],
         ['heat','—','medium-high, lid open'],['gurgle','—','drop to lowest heat immediately'],
         ['5–10 min','—','off the heat, base into cold water']] },
-      { n:'Cold brew · overnight concentrate', d:100, w:1000, t:'cold', p:[
+      { n:'Cold brew · overnight concentrate', d:100, w:1000, t:'cold',
+        g:'MEDIUM', gc:'40–53 clicks', gn:'finer than the ready-to-drink because 1:10 needs the extra extraction', p:[
         ['0:00','1000','medium grind, stir'],['12 h','—','fridge, then filter'],
         ['serve','—','dilute 1:1 with water or milk']] }
     ];
@@ -3519,7 +3548,8 @@
     const $ = id => document.getElementById(id);
     const box = $('timerbox'); if(!box) return;
     const sel = $('tRec'), dose = $('tDose'), clock = $('tClock'),
-          stepEl = $('tStep'), nextEl = $('tNext'), tbl = $('tTable'), totEl = $('tTotal');
+          stepEl = $('tStep'), nextEl = $('tNext'), tbl = $('tTable'), totEl = $('tTotal'),
+          grindEl = $('tGrind');
 
     const RECIPES = window.NB_RECIPES || [];
     if(!RECIPES.length){ stepEl.textContent = 'recipes unavailable'; return; }
@@ -3553,8 +3583,22 @@
         osc.start(now); osc.stop(now + 0.3);
       }catch(e){}
     }
+    // the grind setting for the selected method — shown before you touch the clock
+    function paintGrind(){
+      if(!grindEl) return;
+      const R = RECIPES[idx];
+      if(!R.g){ grindEl.innerHTML = ''; return; }
+      let warn = '';
+      if(factor > 1.6) warn = ' <span class="tgw">↑ scaled up — go 1–2 clicks coarser</span>';
+      else if(factor < 0.7) warn = ' <span class="tgw">↓ small dose — go 1–2 clicks finer if it tastes thin</span>';
+      grindEl.innerHTML =
+        '⚙ grind <b>' + R.g + '</b> · <b>' + (R.gc || '') + '</b> on our C5 ESP' + warn +
+        (R.gn ? '<br><span class="tgn">' + R.gn + '</span>' : '');
+    }
+
     function paint(){
       const R = RECIPES[idx], S = steps();
+      paintGrind();
       const sched = S.filter(s => s.at !== null);
       const cur = sched.filter(s => s.at <= elapsed).pop() || null;
       const nxt = sched.find(s => s.at > elapsed) || null;
